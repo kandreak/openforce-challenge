@@ -1,7 +1,7 @@
 import WebRetriever
 import JSONManager
 
-#todo get filename, date as arg
+#todo get filename and date as arg
 
 # example date format: 2020-07-16T17:00:00
 filename = ""
