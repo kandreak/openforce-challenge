@@ -12,7 +12,6 @@ def serialize (JSONDict):
 
 #filter the list of Python Dictionaries to get a list of Python Dictionaries of Regioni and Totale_Casi
 def getTotaleRegionale (JSONDict):
-    #todo
     resultDict = []
 
     #iterate over provincia
@@ -28,14 +27,14 @@ def getTotaleRegionale (JSONDict):
 
         #else, add new regione
         else:
-            resultDict.append(dict({"codice_regione": x["codice_regione"], "denominazione_regione": x["denominazione_regione"], "totale_casi": x["totale_casi"]}))
-            #resultDict[lenTemp]["codice_regione"] = x["codice_regione"]
-            #resultDict[lenTemp]["denominazione_regione"] = x["denominazione_regione"]
-            #resultDict[lenTemp]["totale_casi"] = x["totale_casi"]
+            #resultDict.append(dict({"codice_regione": x["codice_regione"], "denominazione_regione": x["denominazione_regione"], "totale_casi": x["totale_casi"]}))
+            resultDict.append(dict(
+                {"denominazione_regione": x["denominazione_regione"],
+                 "totale_casi": x["totale_casi"]}))
 
     return resultDict
 
 #filter JSONDict leaving only data about the target date
 def filterByDate(JSONDict, date):
-    #todo
-    return 0
+    result = list(filter(lambda i: i["data"] == date, JSONDict))
+    return result
