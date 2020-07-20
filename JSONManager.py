@@ -1,6 +1,7 @@
 #python component to manage json data
 
 import json
+import datetime
 
 #get a JSON string, return a list of Python Dictionaries of that JSON
 def parse (JSONString):
@@ -36,5 +37,6 @@ def getTotaleRegionale (JSONDict):
 
 #filter JSONDict leaving only data about the target date
 def filterByDate(JSONDict, date):
-    result = list(filter(lambda i: i["data"] == date, JSONDict))
+    dateString = date.strftime('%Y-%m-%d')
+    result = list(filter(lambda i: i["data"].startswith(dateString), JSONDict))
     return result

@@ -1,17 +1,40 @@
-import WebRetriever
+import datetime
+import sys
+
 import JSONManager
+import WebRetriever
 
-#todo get filename and date as arg
-
-# example date format: 2020-07-16T17:00:00
+date = ""
+dateArg = ""
 filename = ""
-date = "2020-07-16T17:00:00"
+
+argv = sys.argv
+if len(argv) > 1:
+    dateArg = argv[1]
 
 if filename == "":
-    if date == "":
+    if dateArg == "":
         filename = "dpc-covid19-ita-province-latest.json"
     else:
         filename = "dpc-covid19-ita-province.json"
+
+        #input sanitizing
+        try:
+            date = datetime.datetime.strptime(dateArg, '%Y-%m-%d')
+        except ValueError:
+            print("Incorrect data format, should be YYYY-MM-DD!")
+            print("it was: " + date + ", from " + dateArg)
+            exit(1)
+
+        if date < datetime.datetime(2020, 2, 24):
+            print("Date should be after 2020-02-24!")
+            exit(1)
+
+        #searching data for at most yesterday allows to avoid errors if today's update is late!
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        if date > yesterday:
+            print("Date should be at most yesterday! (leave it blank to get the latest update)")
+            exit(1)
 
 #repo with raw: in this way I can access the raw file
 repo = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/"
@@ -26,8 +49,11 @@ print("")
 
 JSONDict = JSONManager.parse(JSONString)
 
-print("filtering, aggregation and sorting of JSON data...")
-JSONDict = JSONManager.filterByDate(JSONDict, date)
+print("filtering, aggregating and sorting JSON data...")
+
+if dateArg != "":
+    print("date = " + dateArg)
+    JSONDict = JSONManager.filterByDate(JSONDict, date)
 JSONDictRegione = JSONManager.getTotaleRegionale(JSONDict)
 
 #sorting by totale_casi and denominazione_regione
