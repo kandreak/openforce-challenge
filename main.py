@@ -1,48 +1,67 @@
-import WebRetriever
+import datetime
+
 import JSONManager
+import WebRetriever
 
-#todo get filename and date as arg
+from flask import Flask, request
 
-# example date format: 2020-07-16T17:00:00
-filename = ""
-date = "2020-07-16T17:00:00"
+app = Flask(__name__)
 
-if filename == "":
-    if date == "":
-        filename = "dpc-covid19-ita-province-latest.json"
-    else:
-        filename = "dpc-covid19-ita-province.json"
 
-#repo with raw: in this way I can access the raw file
-repo = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/"
+@app.route('/openforcechallenge')
+def openForceChallenge():
+    date = ""
+    filename = ""
 
-#building url:
-url = repo + filename
+    #example date parameter: ?date=2020-03-15
+    dateArg = request.args.get("date", default="", type=str)
 
-print("retrieving JSON at url " + url + " ... ")
-JSONString = WebRetriever.getJson(url)
-print("... done!")
-print("")
+    if filename == "":
+        if dateArg == "":
+            filename = "dpc-covid19-ita-province-latest.json"
+        else:
+            filename = "dpc-covid19-ita-province.json"
 
-JSONDict = JSONManager.parse(JSONString)
+            # input sanitizing
+            try:
+                date = datetime.datetime.strptime(dateArg, '%Y-%m-%d')
+            except ValueError:
+                return("Incorrect date format, should be YYYY-MM-DD!")
+                exit(1)
 
-print("filtering, aggregation and sorting of JSON data...")
-JSONDict = JSONManager.filterByDate(JSONDict, date)
-JSONDictRegione = JSONManager.getTotaleRegionale(JSONDict)
+            if date < datetime.datetime(2020, 2, 24):
+                return("Date should be after 2020-02-24!")
+                exit(1)
 
-#sorting by totale_casi and denominazione_regione
-#since i need ascending order for denominazione_regione and descending order for totale casi,
-#I do ascending order for both, but I negate each totale casi! :D
-JSONDictSorted = sorted(JSONDictRegione, key = lambda i: ((i["totale_casi"]*-1), i["denominazione_regione"]))
-print("... done!")
-print("")
+            # searching data for at most yesterday allows to avoid errors if today's update is late!
+            yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+            if date > yesterday:
+                return("Date should be at most yesterday! (leave it blank to get the latest update)")
+                exit(1)
 
-print("JSON content as a list of dictionaries:")
-for x in JSONDictSorted:
-    print(x)
+    # repo with raw: in this way I can access the raw file
+    repo = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/"
 
-JSONResult = JSONManager.serialize(JSONDictSorted)
+    # building url:
+    url = repo + filename
 
-print("")
-print("JSON file content:")
-print(JSONResult)
+    JSONString = WebRetriever.getJson(url)
+
+    JSONDict = JSONManager.parse(JSONString)
+
+    if dateArg != "":
+        JSONDict = JSONManager.filterByDate(JSONDict, date)
+
+    JSONDictRegione = JSONManager.getTotaleRegionale(JSONDict)
+
+    # sorting by totale_casi and denominazione_regione
+    # since i need ascending order for denominazione_regione and descending order for totale casi,
+    # I do ascending order for both, but I negate each totale casi! :D
+    JSONDictSorted = sorted(JSONDictRegione, key=lambda i: ((i["totale_casi"] * -1), i["denominazione_regione"]))
+
+    for x in JSONDictSorted:
+        print(x)
+
+    JSONResult = JSONManager.serialize(JSONDictSorted)
+
+    return JSONResult
