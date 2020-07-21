@@ -1,16 +1,36 @@
 import datetime
 import sys
 
+import pandas
+
 import JSONManager
 import WebRetriever
 
 date = ""
 dateArg = ""
 filename = ""
+outputExcelFile = ""
 
+#handmade argument parser. I hate myself for this.
 argv = sys.argv
+hasDate = False
+hasOEF = False
+
 if len(argv) > 1:
-    dateArg = argv[1]
+    if len(argv) % 2 == 0:
+        print("invalid argument list")
+        exit(1)
+    for arg in argv:
+        if hasDate:
+            dateArg = arg
+            hasDate = False
+        if hasOEF:
+            outputExcelFile = arg
+            hasOEF = False
+        if arg == "-d":
+            hasDate = True
+        if arg == "-f":
+            hasOEF = True
 
 if filename == "":
     if dateArg == "":
@@ -23,7 +43,6 @@ if filename == "":
             date = datetime.datetime.strptime(dateArg, '%Y-%m-%d')
         except ValueError:
             print("Incorrect data format, should be YYYY-MM-DD!")
-            print("it was: " + date + ", from " + dateArg)
             exit(1)
 
         if date < datetime.datetime(2020, 2, 24):
@@ -72,3 +91,11 @@ JSONResult = JSONManager.serialize(JSONDictSorted)
 print("")
 print("JSON file content:")
 print(JSONResult)
+
+#save it to excel file using Pandas
+#notes: needed to pip install xlwt, index=False remove the extra first column
+if len(argv) > 2:
+    file = argv[2]
+
+if outputExcelFile != "":
+    pandas.read_json(JSONResult).to_excel(outputExcelFile + ".xls", index=False)
