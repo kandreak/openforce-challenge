@@ -11,7 +11,7 @@ dateArg = ""
 filename = ""
 outputExcelFile = ""
 
-#handmade argument parser. I hate myself for this.
+# handmade argument parser. I hate myself for this.
 argv = sys.argv
 hasDate = False
 hasOEF = False
@@ -38,9 +38,9 @@ if filename == "":
     else:
         filename = "dpc-covid19-ita-province.json"
 
-        #input sanitizing
+        # input sanitizing
         try:
-            date = datetime.datetime.strptime(dateArg, '%Y-%m-%d')
+            date = datetime.datetime.strptime(dateArg, "%Y-%m-%d")
         except ValueError:
             print("Incorrect data format, should be YYYY-MM-DD!")
             exit(1)
@@ -49,16 +49,16 @@ if filename == "":
             print("Date should be after 2020-02-24!")
             exit(1)
 
-        #searching data for at most yesterday allows to avoid errors if today's update is late!
+        # searching data for at most yesterday allows to avoid errors if today's update is late!
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
         if date > yesterday:
             print("Date should be at most yesterday! (leave it blank to get the latest update)")
             exit(1)
 
-#repo with raw: in this way I can access the raw file
+# repo with raw: in this way I can access the raw file
 repo = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/"
 
-#building url:
+# building url:
 url = repo + filename
 
 print("retrieving JSON at url " + url + " ... ")
@@ -75,10 +75,10 @@ if dateArg != "":
     JSONDict = JSONManager.filterByDate(JSONDict, date)
 JSONDictRegione = JSONManager.getTotaleRegionale(JSONDict)
 
-#sorting by totale_casi and denominazione_regione
-#since i need ascending order for denominazione_regione and descending order for totale casi,
-#I do ascending order for both, but I negate each totale casi! :D
-JSONDictSorted = sorted(JSONDictRegione, key = lambda i: ((i["totale_casi"]*-1), i["denominazione_regione"]))
+# sorting by totale_casi and denominazione_regione
+# since i need ascending order for denominazione_regione and descending order for totale casi,
+# I do ascending order for both, but I negate each totale casi! :D
+JSONDictSorted = sorted(JSONDictRegione, key=lambda i: ((i["totale_casi"] * -1), i["denominazione_regione"]))
 print("... done!")
 print("")
 
@@ -92,8 +92,8 @@ print("")
 print("JSON file content:")
 print(JSONResult)
 
-#save it to excel file using Pandas
-#notes: needed to pip install xlwt, index=False remove the extra first column
+# save it to excel file using Pandas
+# notes: needed to pip install xlwt, index=False remove the extra first column
 if len(argv) > 2:
     file = argv[2]
 
